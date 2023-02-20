@@ -1,5 +1,6 @@
 ﻿using GadgetStoreASPExam.Model;
 using GadgetStoreASPExam.Roles;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;

@@ -20,6 +20,7 @@ namespace GadgetStoreASPExam.Controllers
             _context = context;
             _cacheService = cacheService;
         }
+
         [HttpGet]
         [Route("GadgetsList")]
         public async Task<ActionResult<IEnumerable<Gadget>>> Get()
@@ -37,6 +38,7 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [Route("CreateGadget")]
         public ActionResult Add(Gadget gadget)
         {
@@ -53,6 +55,7 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [Route("DeleteGadget")]
 
         public ActionResult Delete(int id)
@@ -71,6 +74,7 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [Route("EditGadget")]
 
         public ActionResult Edit(Gadget gadget)
