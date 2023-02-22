@@ -1,6 +1,7 @@
 ﻿using GadgetStoreASPExam.Cache;
 using GadgetStoreASPExam.Data;
 using GadgetStoreASPExam.Model;
+using GadgetStoreASPExam.Roles;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,12 +15,12 @@ namespace GadgetStoreASPExam.Controllers
         private readonly DbContextClass _context;
         private readonly ICacheService _cacheService;
 
-
         public CategoriesController(DbContextClass context, ICacheService cacheService)
         {
             _context = context;
             _cacheService = cacheService;
         }
+
         [HttpGet]
         [Route("CategoryList")]
         public async Task<ActionResult<IEnumerable<Category>>> Get()
@@ -37,7 +38,8 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = UserRoles.Manager)]
         [Route("CreateCategory")]
         public ActionResult Add(Category category)
         {
@@ -54,13 +56,13 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = UserRoles.Manager)]
         [Route("DeleteCategory")]
 
-        public ActionResult Delete(int id)
+        public ActionResult Delete(Category category)
         {
-
-            var item = _context.Categories.FirstOrDefault(x => x.Id.Equals(id));
+            var item = _context.Categories.FirstOrDefault(x => x.Id.Equals(category.Id));
 
             if (item != null)
             {
@@ -73,12 +75,13 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = UserRoles.Manager)]
         [Route("EditGadget")]
 
         public ActionResult Edit(Category category)
         {
-            var item = _context.Gadgets.FirstOrDefault(x => x.Id.Equals(category.Id));
+            var item = _context.Categories.FirstOrDefault(x => x.Id.Equals(category.Id));
 
             if (item != null)
             {

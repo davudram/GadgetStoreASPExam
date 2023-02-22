@@ -1,6 +1,7 @@
 ﻿using GadgetStoreASPExam.Cache;
 using GadgetStoreASPExam.Data;
 using GadgetStoreASPExam.Model;
+using GadgetStoreASPExam.Roles;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +39,8 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = UserRoles.Manager)]
         [Route("CreateGadget")]
         public ActionResult Add(Gadget gadget)
         {
@@ -55,13 +57,14 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = UserRoles.Manager)]
         [Route("DeleteGadget")]
 
-        public ActionResult Delete(int id)
+        public ActionResult Delete(Gadget gadget)
         {
 
-            var item = _context.Gadgets.FirstOrDefault(x => x.Id.Equals(id));
+            var item = _context.Gadgets.FirstOrDefault(x => x.Id.Equals(gadget.Id));
 
             if (item != null)
             {
@@ -74,7 +77,8 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = UserRoles.Manager)]
         [Route("EditGadget")]
 
         public ActionResult Edit(Gadget gadget)

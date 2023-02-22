@@ -1,6 +1,5 @@
 ﻿using GadgetStoreASPExam.Model;
 using GadgetStoreASPExam.Roles;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -98,16 +97,13 @@ namespace ApiiWithRoleAuth.Controllers
                 await _roleManager.CreateAsync(new IdentityRole(UserRoles.User));
 
 
-            //Доступно только то, что авторизированно админу !
             if (await _roleManager.RoleExistsAsync(UserRoles.Manager))
                 await _userManager.AddToRoleAsync(user, UserRoles.Manager);
-            // доступны методы и пользователей
             if (await _roleManager.RoleExistsAsync(UserRoles.Manager))
                 await _userManager.AddToRoleAsync(user, UserRoles.User);
 
             return Ok("Manager added!");
         }
-
 
         [HttpPost]
         [Route("regAdmin")]
