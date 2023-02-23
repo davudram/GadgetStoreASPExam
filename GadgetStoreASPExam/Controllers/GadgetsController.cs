@@ -38,8 +38,32 @@ namespace GadgetStoreASPExam.Controllers
             return productsCache;
         }
 
+        [HttpGet]
+        [Route("SearchGadgetsList")]
+        public async Task<ActionResult<IEnumerable<Gadget>>> Get(string search)
+        {
+            List<Gadget> productsCache = _cacheService.GetData<List<Gadget>>("Gadget");
+            if (productsCache == null)
+            {
+                var gadgetsSQL = await _context.Gadgets.ToListAsync();
+                if (gadgetsSQL.Count > 0)
+                {
+                    _cacheService.SetData("Gadget", gadgetsSQL, DateTimeOffset.Now.AddDays(1));
+                    productsCache = gadgetsSQL;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                productsCache = productsCache.Where(g => g.Name.Contains(search)).ToList();
+            }
+
+            return productsCache;
+        }
+
+
         [HttpPost]
-        [Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = $"{UserRoles.Admin}, {UserRoles.Manager}")]
         [Route("CreateGadget")]
         public ActionResult Add(Gadget gadget)
         {
@@ -56,7 +80,7 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = $"{UserRoles.Admin}, {UserRoles.Manager}")]
         [Route("DeleteGadget")]
 
         public ActionResult Delete(Gadget gadget)
@@ -75,7 +99,7 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = $"{UserRoles.Admin}, {UserRoles.Manager}")]
         [Route("EditGadget")]
 
         public ActionResult Edit(Gadget gadget)

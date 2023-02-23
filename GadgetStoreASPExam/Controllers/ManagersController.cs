@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using GadgetStoreASPExam.Roles;
+using System.Security.Claims;
 
 namespace GadgetStoreASPExam.Controllers
 {
@@ -20,6 +21,20 @@ namespace GadgetStoreASPExam.Controllers
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("getUserRole")]
+        public IActionResult GetUserRole()
+        {
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            if (role == null)
+            {
+                return BadRequest("Unable to determine user's role");
+            }
+
+            return Ok(new { role });
         }
 
         [HttpPost]
