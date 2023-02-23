@@ -24,7 +24,6 @@ namespace GadgetStoreASPExam.Controllers
 
         [HttpPost]
         [Authorize(Roles = UserRoles.Admin)]
-        [Authorize(Roles = UserRoles.Manager)]
         [Route("delManager")]
         public async Task<IActionResult> DelManager([FromBody] Register model)
         {
@@ -48,7 +47,6 @@ namespace GadgetStoreASPExam.Controllers
 
         [HttpGet]
         [Authorize(Roles = UserRoles.Admin)]
-        [Authorize(Roles = UserRoles.Manager)]
         [Route("selectManager")]
         public async Task<IResult> Get()
         {

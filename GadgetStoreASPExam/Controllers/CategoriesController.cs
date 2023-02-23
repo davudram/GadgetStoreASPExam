@@ -39,7 +39,6 @@ namespace GadgetStoreASPExam.Controllers
 
         [HttpPost]
         [Authorize(Roles = UserRoles.Admin)]
-        [Authorize(Roles = UserRoles.Manager)]
         [Route("CreateCategory")]
         public ActionResult Add(Category category)
         {
@@ -57,7 +56,6 @@ namespace GadgetStoreASPExam.Controllers
 
         [HttpPost]
         [Authorize(Roles = UserRoles.Admin)]
-        [Authorize(Roles = UserRoles.Manager)]
         [Route("DeleteCategory")]
 
         public ActionResult Delete(Category category)
@@ -76,7 +74,6 @@ namespace GadgetStoreASPExam.Controllers
 
         [HttpPost]
         [Authorize(Roles = UserRoles.Admin)]
-        [Authorize(Roles = UserRoles.Manager)]
         [Route("EditGadget")]
 
         public ActionResult Edit(Category category)

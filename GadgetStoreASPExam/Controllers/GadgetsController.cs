@@ -40,7 +40,6 @@ namespace GadgetStoreASPExam.Controllers
 
         [HttpPost]
         [Authorize(Roles = UserRoles.Admin)]
-        [Authorize(Roles = UserRoles.Manager)]
         [Route("CreateGadget")]
         public ActionResult Add(Gadget gadget)
         {
@@ -58,7 +57,6 @@ namespace GadgetStoreASPExam.Controllers
 
         [HttpPost]
         [Authorize(Roles = UserRoles.Admin)]
-        [Authorize(Roles = UserRoles.Manager)]
         [Route("DeleteGadget")]
 
         public ActionResult Delete(Gadget gadget)
@@ -78,7 +76,6 @@ namespace GadgetStoreASPExam.Controllers
 
         [HttpPost]
         [Authorize(Roles = UserRoles.Admin)]
-        [Authorize(Roles = UserRoles.Manager)]
         [Route("EditGadget")]
 
         public ActionResult Edit(Gadget gadget)
