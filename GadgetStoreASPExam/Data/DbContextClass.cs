@@ -17,5 +17,6 @@ namespace GadgetStoreASPExam.Data
         }
         public DbSet<Gadget> Gadgets { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
     }
 }
