@@ -94,7 +94,7 @@ namespace GadgetStoreASPExam.Migrations
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("NameImg")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<double?>("Price")
@@ -116,7 +116,7 @@ namespace GadgetStoreASPExam.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("NameImg")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
@@ -294,13 +294,13 @@ namespace GadgetStoreASPExam.Migrations
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("NameImg")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("UserId", "LoginProvider", "Name");
+                    b.HasKey("UserId", "LoginProvider", "NameImg");
 
                     b.ToTable("AspNetUserTokens", (string)null);
                 });

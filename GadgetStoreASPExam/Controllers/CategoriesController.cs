@@ -25,7 +25,7 @@ namespace GadgetStoreASPExam.Controllers
         [Route("CategoryList")]
         public async Task<ActionResult<IEnumerable<Category>>> Get()
         {
-            List<Category> categoryCache = _cacheService.GetData<List<Category>>("Category");
+            List<Category> categoryCache = _context.Categories.ToList();
             if (categoryCache == null)
             {
                 var categorySQL = await _context.Categories.ToListAsync();

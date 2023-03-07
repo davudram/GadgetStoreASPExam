@@ -1,10 +1,15 @@
-﻿using GadgetStoreASPExam.Cache;
+﻿using Azure;
+using GadgetStoreASPExam.Blob;
+using GadgetStoreASPExam.Cache;
 using GadgetStoreASPExam.Data;
 using GadgetStoreASPExam.Model;
 using GadgetStoreASPExam.Roles;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using System.IO;
+
 
 namespace GadgetStoreASPExam.Controllers
 {
@@ -14,19 +19,21 @@ namespace GadgetStoreASPExam.Controllers
     {
         private readonly DbContextClass _context;
         private readonly ICacheService _cacheService;
+        public static IWebHostEnvironment _environment;
 
 
-        public GadgetsController(DbContextClass context, ICacheService cacheService)
+        public GadgetsController(DbContextClass context, ICacheService cacheService, IWebHostEnvironment environment)
         {
             _context = context;
             _cacheService = cacheService;
+            _environment = environment;
         }
 
         [HttpGet]
         [Route("GadgetsList")]
         public async Task<ActionResult<IEnumerable<Gadget>>> Get()
         {
-            List<Gadget> productsCache = _cacheService.GetData<List<Gadget>>("Gadget");
+            List<Gadget> productsCache = _context.Gadgets.ToList();
             if (productsCache == null)
             {
                 var gadgetsSQL = await _context.Gadgets.ToListAsync();
@@ -41,7 +48,7 @@ namespace GadgetStoreASPExam.Controllers
         [Route("FilterPriceGadgets")]
         public async Task<ActionResult<IEnumerable<Gadget>>> Get(double? minPrice = null, double? maxPrice = null)
         {
-            List<Gadget> productsCache = _cacheService.GetData<List<Gadget>>("Gadget");
+            List<Gadget> productsCache = _context.Gadgets.ToList();
             if (productsCache == null)
             {
                 var gadgetsSQL = await _context.Gadgets.ToListAsync();
@@ -71,7 +78,7 @@ namespace GadgetStoreASPExam.Controllers
         [Route("SearchGadgetsList")]
         public async Task<ActionResult<IEnumerable<Gadget>>> Get(string search)
         {
-            List<Gadget> productsCache = _cacheService.GetData<List<Gadget>>("Gadget");
+            List<Gadget> productsCache = _context.Gadgets.ToList();
             if (productsCache == null)
             {
                 var gadgetsSQL = await _context.Gadgets.ToListAsync();
@@ -90,6 +97,52 @@ namespace GadgetStoreASPExam.Controllers
             return productsCache;
         }
 
+        [HttpPost]
+        [Authorize(Roles = $"{UserRoles.Admin}, {UserRoles.Manager}")]
+        [Route("Upload")]
+        public async Task<string> Upload([FromForm] GadgetUpload gadgetUpload)
+        {
+            if (gadgetUpload.upload?.files?.Length > 0 && gadgetUpload.gadget != null)
+            {
+                try
+                {
+                    var item = _context.Gadgets.FirstOrDefault(x => x.Name.Equals(gadgetUpload.gadget.Name));
+                    if (item == null)
+                    {
+                        using (var stream = gadgetUpload.upload.files.OpenReadStream())
+                        {
+                            var blobStorageService = new BlobStorageService("DefaultEndpointsProtocol=https;AccountName=gadgetblobs;AccountKey=d9e/xsewxJcMlTP5HrAkzMJASL56rH9Mz9wP1yWi9QxJNTWDYvg66em3q9FvMcuYoFTxZfhAeThh+AStNx0VVQ==;EndpointSuffix=core.windows.net", "files");
+                            string imageUrl = await blobStorageService.UploadImageToBlobStorage(stream, gadgetUpload.upload.files.FileName);
+
+                            var newGadget = new Gadget
+                            {
+                                IdCategory = gadgetUpload.gadget.IdCategory,
+                                Name = gadgetUpload.gadget.Name,
+                                Price = gadgetUpload.gadget.Price,
+                                Image = imageUrl
+                            };
+
+                            _context.Gadgets.Add(newGadget);
+                            _context.SaveChanges();
+                        }
+
+                        return "Upload successful";
+                    }
+                    else
+                    {
+                        return "error";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return ex.ToString();
+                }
+            }
+
+            return "Upload Failed";
+        }
+
+
 
         [HttpPost]
         [Authorize(Roles = $"{UserRoles.Admin}, {UserRoles.Manager}")]
@@ -102,7 +155,7 @@ namespace GadgetStoreASPExam.Controllers
             {
                 _context.Add(new Gadget { IdCategory = gadget.IdCategory, Name = gadget.Name, Price = gadget.Price, Image = gadget.Image });
                 _context.SaveChanges();
-                _cacheService.SetData("Gadget", _context.Gadgets, DateTimeOffset.Now.AddDays(1));
+                //_cacheService.SetData("Gadget", _context.Gadgets, DateTimeOffset.Now.AddDays(1));
                 return Ok();
             }
             return NotFound();

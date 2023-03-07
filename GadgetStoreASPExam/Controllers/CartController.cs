@@ -19,7 +19,7 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpGet]
-        [Route("")]
+        [Route("GetCart")]
         public IActionResult GetCart()
         {
             var userId = User.Identity.Name;
@@ -31,7 +31,7 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpPost]
-        [Route("")]
+        [Route("AddCart")]
         public IActionResult AddToCart([FromBody] CartItem cartItem)
         {
             var userId = User.Identity.Name;
@@ -61,7 +61,7 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpPut]
-        [Route("")]
+        [Route("UpdateCart")]
         public IActionResult UpdateCartItem([FromBody] CartItem cartItem)
         {
             var userId = User.Identity.Name;
