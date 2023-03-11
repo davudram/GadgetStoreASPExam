@@ -8,6 +8,8 @@ using ConfigurationManager = GadgetStoreASPExam.ConfigurationManager;
 using System.Text;
 using Microsoft.Extensions.Options;
 using GadgetStoreASPExam.Cache;
+using Serilog;
+using GadgetStoreASPExam.Loggers;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -19,9 +21,25 @@ options.UseSqlServer(
     builder.Configuration.GetConnectionString("DefaultConnection"),
     b => b.MigrationsAssembly(typeof(DbContextClass).Assembly.FullName)));
 
+var logger = new LoggerConfiguration()
+        .ReadFrom.Configuration(builder.Configuration)
+        .Enrich.FromLogContext()
+        .CreateLogger();
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog(logger);
+
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<DbContextClass>()
     .AddDefaultTokenProviders();
+
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.Cookie.Name = ".AdventureWorks.Session";
+    options.IdleTimeout = TimeSpan.FromSeconds(10);
+    options.Cookie.IsEssential = true;
+});
 
 builder.Services.AddSwaggerGen(options => {
     options.SwaggerDoc("V1", new OpenApiInfo
@@ -77,6 +95,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseMiddleware(typeof(ExceptionHandlingMiddleware));
+app.UseSession();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

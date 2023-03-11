@@ -37,6 +37,23 @@ namespace GadgetStoreASPExam.Controllers
             return Ok(new { role });
         }
 
+        [HttpGet("UserId")]
+        public async Task<IActionResult> GetUserId()
+        {
+            var userNameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            if (userNameClaim == null)
+            {
+                return NotFound();
+            }
+            var user = await _userManager.FindByNameAsync(userNameClaim);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return Ok(user.UserName);
+        }
+
+
         [HttpPost]
         [Authorize(Roles = UserRoles.Admin)]
         [Route("delManager")]

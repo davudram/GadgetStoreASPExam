@@ -100,37 +100,17 @@ namespace GadgetStoreASPExam.Controllers
         [HttpPost]
         [Authorize(Roles = $"{UserRoles.Admin}, {UserRoles.Manager}")]
         [Route("Upload")]
-        public async Task<string> Upload([FromForm] GadgetUpload gadgetUpload)
+        public async Task<string> Upload([FromForm] UploadFile uploadfile)
         {
-            if (gadgetUpload.upload?.files?.Length > 0 && gadgetUpload.gadget != null)
+            if (uploadfile.files?.Length > 0 && uploadfile != null)
             {
                 try
                 {
-                    var item = _context.Gadgets.FirstOrDefault(x => x.Name.Equals(gadgetUpload.gadget.Name));
-                    if (item == null)
+                    using (var stream = uploadfile.files.OpenReadStream())
                     {
-                        using (var stream = gadgetUpload.upload.files.OpenReadStream())
-                        {
-                            var blobStorageService = new BlobStorageService("DefaultEndpointsProtocol=https;AccountName=gadgetblobs;AccountKey=d9e/xsewxJcMlTP5HrAkzMJASL56rH9Mz9wP1yWi9QxJNTWDYvg66em3q9FvMcuYoFTxZfhAeThh+AStNx0VVQ==;EndpointSuffix=core.windows.net", "files");
-                            string imageUrl = await blobStorageService.UploadImageToBlobStorage(stream, gadgetUpload.upload.files.FileName);
-
-                            var newGadget = new Gadget
-                            {
-                                IdCategory = gadgetUpload.gadget.IdCategory,
-                                Name = gadgetUpload.gadget.Name,
-                                Price = gadgetUpload.gadget.Price,
-                                Image = imageUrl
-                            };
-
-                            _context.Gadgets.Add(newGadget);
-                            _context.SaveChanges();
-                        }
-
-                        return "Upload successful";
-                    }
-                    else
-                    {
-                        return "error";
+                        var blobStorageService = new BlobStorageService("DefaultEndpointsProtocol=https;AccountName=gadgetblobs;AccountKey=d9e/xsewxJcMlTP5HrAkzMJASL56rH9Mz9wP1yWi9QxJNTWDYvg66em3q9FvMcuYoFTxZfhAeThh+AStNx0VVQ==;EndpointSuffix=core.windows.net", "files");
+                        string imageUrl = await blobStorageService.UploadImageToBlobStorage(stream, uploadfile.files.FileName);
+                        return imageUrl;
                     }
                 }
                 catch (Exception ex)
@@ -155,7 +135,7 @@ namespace GadgetStoreASPExam.Controllers
             {
                 _context.Add(new Gadget { IdCategory = gadget.IdCategory, Name = gadget.Name, Price = gadget.Price, Image = gadget.Image });
                 _context.SaveChanges();
-                //_cacheService.SetData("Gadget", _context.Gadgets, DateTimeOffset.Now.AddDays(1));
+                _cacheService.SetData("Gadget", _context.Gadgets, DateTimeOffset.Now.AddDays(1));
                 return Ok();
             }
             return NotFound();
