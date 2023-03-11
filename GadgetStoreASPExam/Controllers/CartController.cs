@@ -22,11 +22,7 @@ namespace GadgetStoreASPExam.Controllers
         [Route("GetCart")]
         public IActionResult GetCart()
         {
-            var userId = User.Identity.Name;
-            var cartItems = _context.CartItems
-                .Where(x => x.UserId == userId)
-                .ToList();
-
+            var cartItems = _context.CartItems.ToList();
             return Ok(cartItems);
         }
 
@@ -60,7 +56,7 @@ namespace GadgetStoreASPExam.Controllers
             return Ok(cartItems);
         }
 
-        [HttpPut]
+        [HttpPost]
         [Route("UpdateCart")]
         public IActionResult UpdateCartItem([FromBody] CartItem cartItem)
         {
@@ -88,13 +84,12 @@ namespace GadgetStoreASPExam.Controllers
             return Ok(cartItems);
         }
 
-        [HttpDelete]
-        [Route("{id}")]
-        public IActionResult DeleteCartItem(int id)
+        [HttpPost]
+        [Route("DeleteCart")]
+        public IActionResult DeleteCartItem(CartItem cartItem)
         {
-            var userId = User.Identity.Name;
             var existingItem = _context.CartItems
-                .FirstOrDefault(x => x.UserId == userId && x.Id == id);
+                .FirstOrDefault(x => x.Id == cartItem.Id);
 
             if (existingItem == null)
             {
@@ -104,9 +99,7 @@ namespace GadgetStoreASPExam.Controllers
             _context.CartItems.Remove(existingItem);
             _context.SaveChanges();
 
-            var cartItems = _context.CartItems
-                .Where(x => x.UserId == userId)
-                .ToList();
+            var cartItems = _context.CartItems.ToList();
 
             return Ok(cartItems);
         }

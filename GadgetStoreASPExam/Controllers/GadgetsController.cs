@@ -76,7 +76,7 @@ namespace GadgetStoreASPExam.Controllers
 
         [HttpGet]
         [Route("SearchGadgetsList")]
-        public async Task<ActionResult<IEnumerable<Gadget>>> Get(string search)
+        public async Task<ActionResult<IEnumerable<Gadget>>> Get([FromQuery]string search)
         {
             List<Gadget> productsCache = _context.Gadgets.ToList();
             if (productsCache == null)
