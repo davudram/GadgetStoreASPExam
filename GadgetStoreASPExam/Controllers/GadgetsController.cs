@@ -44,6 +44,7 @@ namespace GadgetStoreASPExam.Controllers
             }
             return productsCache;
         }
+
         [HttpGet]
         [Route("FilterPriceGadgets")]
         public async Task<ActionResult<IEnumerable<Gadget>>> Get(double? minPrice = null, double? maxPrice = null)
@@ -73,10 +74,9 @@ namespace GadgetStoreASPExam.Controllers
         }
 
 
-
         [HttpGet]
         [Route("SearchGadgetsList")]
-        public async Task<ActionResult<IEnumerable<Gadget>>> Get([FromQuery]string search)
+        public async Task<ActionResult<IEnumerable<Gadget>>> Get([FromQuery] string search)
         {
             List<Gadget> productsCache = _context.Gadgets.ToList();
             if (productsCache == null)
@@ -96,6 +96,30 @@ namespace GadgetStoreASPExam.Controllers
 
             return productsCache;
         }
+
+        [HttpGet]
+        [Route("SelectedForCategory")]
+        public async Task<ActionResult<IEnumerable<Gadget>>> Get(int idcategory)
+        {
+            List<Gadget> productCache = _context.Gadgets.ToList();
+            if (productCache == null)
+            {
+                var gadgetsSQL = _context.Gadgets.ToList();
+
+                if (gadgetsSQL.Count > 0)
+                {
+                    _cacheService.SetData("Gadget", gadgetsSQL, DateTimeOffset.Now.AddDays(1));
+                }
+            }
+
+            if (idcategory > 0)
+            {
+                productCache = productCache.Where(x => x.IdCategory == idcategory).ToList();
+            }
+
+            return productCache;
+        }
+
 
         [HttpPost]
         [Authorize(Roles = $"{UserRoles.Admin}, {UserRoles.Manager}")]
@@ -120,6 +144,34 @@ namespace GadgetStoreASPExam.Controllers
             }
 
             return "Upload Failed";
+        }
+
+        [HttpGet]
+        [Route("FilterPriceByIdCategory")]
+        public async Task<ActionResult<IEnumerable<Gadget>>> Get(double? minPrice = null, double? maxPrice = null, int? idcategory = null)
+        {
+            List<Gadget> productsCache = _context.Gadgets.ToList();
+            if (productsCache == null)
+            {
+                var gadgetsSQL = await _context.Gadgets.ToListAsync();
+                if (gadgetsSQL.Count > 0)
+                {
+                    _cacheService.SetData("Gadget", gadgetsSQL, DateTimeOffset.Now.AddDays(1));
+                }
+                productsCache = gadgetsSQL;
+            }
+
+            if (minPrice.HasValue && idcategory.HasValue)
+            {
+                productsCache = productsCache.Where(p => p.Price >= minPrice.Value && p.IdCategory == idcategory).ToList();
+            }
+
+            if (maxPrice.HasValue && idcategory.HasValue)
+            {
+                productsCache = productsCache.Where(p => p.Price <= maxPrice.Value && p.IdCategory == idcategory).ToList();
+            }
+
+            return productsCache;
         }
 
 

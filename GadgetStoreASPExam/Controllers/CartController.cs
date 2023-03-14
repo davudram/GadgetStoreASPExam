@@ -86,10 +86,10 @@ namespace GadgetStoreASPExam.Controllers
 
         [HttpPost]
         [Route("DeleteCart")]
-        public IActionResult DeleteCartItem(CartItem cartItem)
+        public IActionResult DeleteCartItem([FromQuery] int Id)
         {
             var existingItem = _context.CartItems
-                .FirstOrDefault(x => x.Id == cartItem.Id);
+                .FirstOrDefault(x => x.ProductId == Id);
 
             if (existingItem == null)
             {
