@@ -6,6 +6,8 @@
 
         public int? IdCategory { get; set; }
 
+        public string? IsPremium { get; set; }
+
         public string? Name { get; set; }
 
         public double? Price { get; set; }

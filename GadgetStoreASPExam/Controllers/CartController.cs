@@ -1,8 +1,10 @@
-﻿using GadgetStoreASPExam.Data;
+﻿using GadgetStoreASPExam.Cache;
+using GadgetStoreASPExam.Data;
 using GadgetStoreASPExam.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 
 namespace GadgetStoreASPExam.Controllers
@@ -12,18 +14,28 @@ namespace GadgetStoreASPExam.Controllers
     public class CartController : ControllerBase
     {
         private readonly DbContextClass _context;
+        private readonly ICacheService _cacheService;
 
-        public CartController(DbContextClass context)
+        public CartController(DbContextClass context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         [HttpGet]
         [Route("GetCart")]
-        public IActionResult GetCart()
+        public async Task<ActionResult<IEnumerable<CartItem>>> Get()
         {
-            var cartItems = _context.CartItems.ToList();
-            return Ok(cartItems);
+            List<CartItem> cartItemsCache = _context.CartItems.ToList();
+            if (cartItemsCache == null)
+            {
+                var cartSQL = await _context.CartItems.ToListAsync();
+                if (cartSQL.Count > 0)
+                {
+                    _cacheService.SetData("CartItem", cartSQL, DateTimeOffset.Now.AddDays(1));
+                }
+            }
+            return Ok(cartItemsCache);
         }
 
         [HttpPost]
@@ -31,11 +43,10 @@ namespace GadgetStoreASPExam.Controllers
         public IActionResult AddToCart([FromBody] CartItem cartItem)
         {
             var userId = User.Identity.Name;
-            var existingItem = _context.CartItems
-                .FirstOrDefault(x => x.UserId == userId && x.ProductId == cartItem.ProductId);
+            var existingItem = _context.CartItems.FirstOrDefault(x => x.UserId == userId && x.ProductId == cartItem.ProductId);
 
             if (existingItem != null)
-            { 
+            {
                 existingItem.Quantity += cartItem.Quantity;
                 existingItem.UpdatedAt = DateTime.UtcNow;
             }
@@ -48,6 +59,7 @@ namespace GadgetStoreASPExam.Controllers
             }
 
             _context.SaveChanges();
+            _cacheService.SetData("CartItem", _context.CartItems, DateTimeOffset.Now.AddDays(1));
 
             var cartItems = _context.CartItems
                 .Where(x => x.UserId == userId)
@@ -60,26 +72,23 @@ namespace GadgetStoreASPExam.Controllers
         [Route("UpdateCart")]
         public IActionResult UpdateCartItem([FromBody] CartItem cartItem)
         {
-            var userId = User.Identity.Name;
             var existingItem = _context.CartItems
-                .FirstOrDefault(x => x.UserId == userId && x.Id == cartItem.Id);
+                .FirstOrDefault(x => x.ProductId == cartItem.ProductId);
 
             if (existingItem == null)
             {
                 return NotFound();
             }
 
-            existingItem.ProductId = cartItem.ProductId;
             existingItem.ProductName = cartItem.ProductName;
             existingItem.Price = cartItem.Price;
             existingItem.Quantity = cartItem.Quantity;
             existingItem.UpdatedAt = DateTime.UtcNow;
 
             _context.SaveChanges();
+            _cacheService.SetData("CartItem", _context.CartItems, DateTimeOffset.Now.AddDays(1));
 
-            var cartItems = _context.CartItems
-                .Where(x => x.UserId == userId)
-                .ToList();
+            var cartItems = _context.CartItems.ToList();
 
             return Ok(cartItems);
         }
@@ -98,6 +107,7 @@ namespace GadgetStoreASPExam.Controllers
 
             _context.CartItems.Remove(existingItem);
             _context.SaveChanges();
+            _cacheService.SetData("CartItem", _context.CartItems, DateTimeOffset.Now.AddDays(1));
 
             var cartItems = _context.CartItems.ToList();
 

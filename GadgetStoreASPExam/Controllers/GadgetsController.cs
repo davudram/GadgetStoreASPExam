@@ -46,32 +46,35 @@ namespace GadgetStoreASPExam.Controllers
         }
 
         [HttpGet]
-        [Route("FilterPriceGadgets")]
-        public async Task<ActionResult<IEnumerable<Gadget>>> Get(double? minPrice = null, double? maxPrice = null)
+        [Route("MinMediumMaxGadgetList")]
+        public async Task<ActionResult<IEnumerable<Gadget>>> Get(int? categoryId, string sort)
         {
             List<Gadget> productsCache = _context.Gadgets.ToList();
+
             if (productsCache == null)
             {
-                var gadgetsSQL = await _context.Gadgets.ToListAsync();
-                if (gadgetsSQL.Count > 0)
+                productsCache = await _context.Gadgets.Include(g => g.IdCategoryNavigation).ToListAsync();
+                if (productsCache.Count > 0)
                 {
-                    _cacheService.SetData("Gadget", gadgetsSQL, DateTimeOffset.Now.AddDays(1));
+                    _cacheService.SetData("Gadget", productsCache, DateTimeOffset.Now.AddDays(1));
                 }
-                productsCache = gadgetsSQL;
             }
 
-            if (minPrice.HasValue)
-            {
-                productsCache = productsCache.Where(p => p.Price >= minPrice.Value).ToList();
-            }
+            var filteredProducts = categoryId.HasValue
+                ? productsCache.Where(p => p.IdCategory == categoryId.Value)
+                : productsCache;
 
-            if (maxPrice.HasValue)
-            {
-                productsCache = productsCache.Where(p => p.Price <= maxPrice.Value).ToList();
-            }
+            var sortedProducts = sort == "min"
+                ? filteredProducts.OrderBy(p => p.Price)
+                : sort == "max"
+                    ? filteredProducts.OrderByDescending(p => p.Price)
+                    : filteredProducts.OrderBy(p => p.IdCategoryNavigation?.Id).ThenBy(p => p.Price);
 
-            return productsCache;
+            return sortedProducts.ToList();
         }
+
+
+
 
 
         [HttpGet]
@@ -174,6 +177,28 @@ namespace GadgetStoreASPExam.Controllers
             return productsCache;
         }
 
+        [HttpGet]
+        [Route("SearchByIsPremium")]
+        public async Task<ActionResult<IEnumerable<Gadget>>> SelectPremium([FromQuery] string checkPremium)
+        {
+            List<Gadget> productsCache = _context.Gadgets.ToList();
+            if (productsCache == null)
+            {
+                var gadgetsSQL = await _context.Gadgets.ToListAsync();
+                if (gadgetsSQL.Count > 0)
+                {
+                    _cacheService.SetData("Gadget", gadgetsSQL, DateTimeOffset.Now.AddDays(1));
+                    productsCache = gadgetsSQL;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(checkPremium))
+            {
+                productsCache = productsCache.Where(g => g.IsPremium.Contains(checkPremium)).ToList();
+            }
+
+            return productsCache;
+        }
 
 
         [HttpPost]
@@ -185,7 +210,7 @@ namespace GadgetStoreASPExam.Controllers
 
             if (item == null)
             {
-                _context.Add(new Gadget { IdCategory = gadget.IdCategory, Name = gadget.Name, Price = gadget.Price, Image = gadget.Image });
+                _context.Add(new Gadget { IdCategory = gadget.IdCategory, IsPremium = gadget.IsPremium, Name = gadget.Name, Price = gadget.Price, Image = gadget.Image });
                 _context.SaveChanges();
                 _cacheService.SetData("Gadget", _context.Gadgets, DateTimeOffset.Now.AddDays(1));
                 return Ok();
@@ -222,9 +247,10 @@ namespace GadgetStoreASPExam.Controllers
 
             if (item != null)
             {
-                _context.Remove(item);
-                _context.SaveChanges();
-                _context.Add(new Gadget { IdCategory = gadget.IdCategory, Name = gadget.Name, Price = gadget.Price });
+                item.IdCategory = gadget.IdCategory;
+                item.IsPremium = gadget.IsPremium;
+                item.Name = gadget.Name;
+                item.Price = gadget.Price;
                 _context.SaveChanges();
                 _cacheService.SetData("Gadget", _context.Gadgets, DateTimeOffset.Now.AddDays(1));
                 return Ok();
