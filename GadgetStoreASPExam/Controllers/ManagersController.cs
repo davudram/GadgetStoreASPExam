@@ -79,10 +79,15 @@ namespace GadgetStoreASPExam.Controllers
 
         [HttpGet]
         [Authorize(Roles = UserRoles.Admin)]
-        [Route("selectManager")]
-        public async Task<IResult> Get()
+        [Route("selectUser")]
+        public async Task<ActionResult> Get()
         {
-            return Results.Json(_userManager.Users);
+            var listUser = _userManager.Users;
+            if(listUser == null && listUser.Count() < 0)
+            {
+                return NotFound("Error");
+            }
+            return Ok(listUser);
         }
     }
 }
