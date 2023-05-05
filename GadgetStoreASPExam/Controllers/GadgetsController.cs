@@ -251,6 +251,7 @@ namespace GadgetStoreASPExam.Controllers
                 item.IsPremium = gadget.IsPremium;
                 item.Name = gadget.Name;
                 item.Price = gadget.Price;
+                item.Image = gadget.Image;
                 item.IsPremium = gadget.IsPremium;
                 _context.SaveChanges();
                 _cacheService.SetData("Gadget", _context.Gadgets, DateTimeOffset.Now.AddDays(1));
