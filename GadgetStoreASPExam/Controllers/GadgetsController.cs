@@ -125,40 +125,30 @@ namespace GadgetStoreASPExam.Controllers
         [HttpPost]
         [Authorize(Roles = $"{UserRoles.Admin}, {UserRoles.Manager}")]
         [Route("Upload")]
-        public async Task<IActionResult> UploadFile(IFormFile file)
+        public async Task<ActionResult<string>> Post([FromForm] FileModel file)
         {
             try
             {
-                var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FormFile.FileName);
+                string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", fileName);
 
-                if (!Directory.Exists(uploadsFolder))
+                using (Stream stream = new FileStream(path, FileMode.Create))
                 {
-                    Directory.CreateDirectory(uploadsFolder);
+                    await file.FormFile.CopyToAsync(stream);
                 }
 
-                if (file.Length > 0)
-                {
-                    var fileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
+                string baseUrl = "C:\\Users\\Toucc\\source\\repos\\GadgetStoreASPExam\\GadgetStoreASPExam\\wwwroot";
+                string fileUrl = $"{baseUrl}//{fileName.Replace("\\", "/")}";
 
-                    var filePath = Path.Combine(uploadsFolder, fileName);
+                return Ok(fileUrl);
 
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(fileStream);
-                    }
-
-                    return Ok(new { fileName });
-                }
-                else
-                {
-                    return BadRequest();
-                }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, "An error occurred while uploading the file.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
+
 
         [HttpGet]
         [Route("FilterPriceByIdCategory")]
