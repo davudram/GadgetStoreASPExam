@@ -1,6 +1,4 @@
-﻿using Azure;
-using GadgetStoreASPExam.Blob;
-using GadgetStoreASPExam.Cache;
+﻿using GadgetStoreASPExam.Cache;
 using GadgetStoreASPExam.Data;
 using GadgetStoreASPExam.Model;
 using GadgetStoreASPExam.Roles;
@@ -9,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.IO;
-
+using System.Net.Http.Headers;
 
 namespace GadgetStoreASPExam.Controllers
 {
@@ -127,26 +125,39 @@ namespace GadgetStoreASPExam.Controllers
         [HttpPost]
         [Authorize(Roles = $"{UserRoles.Admin}, {UserRoles.Manager}")]
         [Route("Upload")]
-        public async Task<string> Upload([FromForm] UploadFile uploadfile)
+        public async Task<IActionResult> UploadFile(IFormFile file)
         {
-            if (uploadfile.files?.Length > 0 && uploadfile != null)
+            try
             {
-                try
+                var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
+
+                if (!Directory.Exists(uploadsFolder))
                 {
-                    using (var stream = uploadfile.files.OpenReadStream())
-                    {
-                        var blobStorageService = new BlobStorageService("DefaultEndpointsProtocol=https;AccountName=gadgetblobs;AccountKey=d9e/xsewxJcMlTP5HrAkzMJASL56rH9Mz9wP1yWi9QxJNTWDYvg66em3q9FvMcuYoFTxZfhAeThh+AStNx0VVQ==;EndpointSuffix=core.windows.net", "files");
-                        string imageUrl = await blobStorageService.UploadImageToBlobStorage(stream, uploadfile.files.FileName);
-                        return imageUrl;
-                    }
+                    Directory.CreateDirectory(uploadsFolder);
                 }
-                catch (Exception ex)
+
+                if (file.Length > 0)
                 {
-                    return ex.ToString();
+                    var fileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
+
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(fileStream);
+                    }
+
+                    return Ok(new { fileName });
+                }
+                else
+                {
+                    return BadRequest();
                 }
             }
-
-            return "Upload Failed";
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while uploading the file.");
+            }
         }
 
         [HttpGet]

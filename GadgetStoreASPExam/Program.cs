@@ -10,38 +10,31 @@ using Microsoft.Extensions.Options;
 using GadgetStoreASPExam.Cache;
 using Serilog;
 using GadgetStoreASPExam.Loggers;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ICacheService, CacheService>();
 builder.Services.AddDbContext<DbContextClass>(options =>
-options.UseSqlServer(
-    builder.Configuration.GetConnectionString("DefaultConnection"),
-    b => b.MigrationsAssembly(typeof(DbContextClass).Assembly.FullName)));
-
-var logger = new LoggerConfiguration()
-        .ReadFrom.Configuration(builder.Configuration)
-        .Enrich.FromLogContext()
-        .CreateLogger();
-builder.Logging.ClearProviders();
-builder.Logging.AddSerilog(logger);
-
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        b => b.MigrationsAssembly(typeof(DbContextClass).Assembly.FullName)));
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<DbContextClass>()
     .AddDefaultTokenProviders();
-
 builder.Services.AddDistributedMemoryCache();
-
 builder.Services.AddSession(options =>
 {
     options.Cookie.Name = ".AdventureWorks.Session";
     options.IdleTimeout = TimeSpan.FromSeconds(10);
     options.Cookie.IsEssential = true;
 });
-
-builder.Services.AddSwaggerGen(options => {
+builder.Services.AddSwaggerGen(options =>
+{
     options.SwaggerDoc("V1", new OpenApiInfo
     {
         Version = "V1",
@@ -57,24 +50,28 @@ builder.Services.AddSwaggerGen(options => {
         Description = "Bearer Authentication with JWT Token",
         Type = SecuritySchemeType.Http
     });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement {
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
         {
-            new OpenApiSecurityScheme {
-                Reference = new OpenApiReference {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
                     Id = "Bearer",
-                        Type = ReferenceType.SecurityScheme
+                    Type = ReferenceType.SecurityScheme
                 }
             },
-            new List < string > ()
+            new List<string>()
         }
     });
 });
-
-builder.Services.AddAuthentication(opt => {
+builder.Services.AddAuthentication(opt =>
+{
     opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     opt.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options => {
+}).AddJwtBearer(options =>
+{
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -86,16 +83,28 @@ builder.Services.AddAuthentication(opt => {
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ConfigurationManager.AppSetting["JWT:Secret"]))
     };
 });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:3000")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(options => {
+    app.UseSwaggerUI(options =>
+    {
         options.SwaggerEndpoint("/swagger/V1/swagger.json", "Product WebAPI");
     });
 }
-
-app.UseMiddleware(typeof(ExceptionHandlingMiddleware));
+app.UseCors("AllowReactApp");
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseSession();
 app.UseHttpsRedirection();
 app.UseAuthentication();
