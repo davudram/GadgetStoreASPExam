@@ -11,6 +11,7 @@ using GadgetStoreASPExam.Cache;
 using Serilog;
 using GadgetStoreASPExam.Loggers;
 using System;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -103,6 +104,14 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/swagger/V1/swagger.json", "Product WebAPI");
     });
 }
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+           Path.Combine(builder.Environment.ContentRootPath, "wwwroot")),
+    RequestPath = "/Resources"
+});
+
 app.UseCors("AllowReactApp");
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseSession();

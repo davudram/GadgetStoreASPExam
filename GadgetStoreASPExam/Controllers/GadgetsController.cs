@@ -137,8 +137,8 @@ namespace GadgetStoreASPExam.Controllers
                     await file.FormFile.CopyToAsync(stream);
                 }
 
-                string baseUrl = "C:\\Users\\Toucc\\source\\repos\\GadgetStoreASPExam\\GadgetStoreASPExam\\wwwroot";
-                string fileUrl = $"{baseUrl}//{fileName.Replace("\\", "/")}";
+                string baseUrl = "https://localhost:7108/resources";
+                string fileUrl = $"{baseUrl}/{fileName.Replace("\\", "/")}";
 
                 return Ok(fileUrl);
 
