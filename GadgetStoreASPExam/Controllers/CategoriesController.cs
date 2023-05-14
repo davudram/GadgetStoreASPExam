@@ -82,9 +82,7 @@ namespace GadgetStoreASPExam.Controllers
 
             if (item != null)
             {
-                _context.Remove(item);
-                _context.SaveChanges();
-                _context.Add(new Category { NameGadgets = category.NameGadgets });
+                item.NameGadgets = category.NameGadgets;
                 _context.SaveChanges();
                 _cacheService.SetData("Category", _context.Categories, DateTimeOffset.Now.AddDays(1));
                 return Ok();
